@@ -9,6 +9,9 @@ export class PlayerService {
   private readonly context: AudioContext;
   private modPlayer: AudioWorkletNode;
 
+  public loaded = false;
+  public playing = false;
+
   public $ready: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
   constructor() {
@@ -47,6 +50,7 @@ export class PlayerService {
 
   loadSong(modData: any) {
     console.log(this.modPlayer);
+    this.loaded = true;
     this.modPlayer.port.postMessage({
       type: 'load_song',
       payload: modData
@@ -54,9 +58,23 @@ export class PlayerService {
   }
 
   play() {
+    if (this.playing) {
+      this.modPlayer.port.postMessage({
+        type: 'pause'
+      });
+    } else {
+      this.modPlayer.port.postMessage({
+        type: 'play'
+      });
+    }
+    this.playing = !this.playing;
+  }
+
+  stop() {
     this.modPlayer.port.postMessage({
-      type: 'play'
+      type: 'stop'
     });
+    this.playing = false;
   }
 
 }

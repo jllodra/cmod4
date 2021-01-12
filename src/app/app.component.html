@@ -1,4 +1,8 @@
 
-<button (click)="play($event)">Play</button>
+<button (click)="load($event)">Load</button>
+<br><br>
+<button (click)="play($event)" [disabled]="!playerService.loaded">{{ playerService.playing ? 'Pause' : 'Play' }}</button>
+<br><br>
+<button (click)="stop($event)" [disabled]="!playerService.loaded">Stop</button>
 
 <router-outlet></router-outlet>

@@ -36,10 +36,15 @@ class ModPlayer extends AudioWorkletProcessor {
           this.load(songData);
           break;
         case 'play':
-          this.shouldPlay = true;
+          this.play();
+          break;
+        case 'pause':
+          this.pause();
+          break;
+        case 'stop':
+          this.stop();
           break;
       }
-
     };
   }
 
@@ -52,8 +57,21 @@ class ModPlayer extends AudioWorkletProcessor {
     console.log(this.modulePtr);
   }
 
+  play() {
+    this.shouldPlay = true;
+  }
+
+  pause() {
+    this.shouldPlay = false;
+  }
+
+  stop() {
+    this.shouldPlay = false;
+    libopenmpt._openmpt_module_set_position_seconds(this.modulePtr, 0);
+  }
+
   process(inputs, outputs, parameters) {
-    if (this.modulePtr == 0 || this.modulePtr == null) {
+    if (this.modulePtr === 0 || this.modulePtr == null) {
       return true;
     }
 
@@ -79,12 +97,6 @@ class ModPlayer extends AudioWorkletProcessor {
 
       //console.log(actualFramesPerChunk);
 
-      if (actualFramesPerChunk == 0) {
-        ended = true;
-        // modulePtr will be 0 on openmpt: error: openmpt_module_read_float_stereo: ERROR: module * not valid or other openmpt error
-        error = !this.modulePtr;
-      }
-
       const rawAudioLeft = libopenmpt.HEAPF32.subarray(this.leftBufferPtr / 4, this.leftBufferPtr / 4 + actualFramesPerChunk);
       const rawAudioRight = libopenmpt.HEAPF32.subarray(this.rightBufferPtr / 4, this.rightBufferPtr / 4 + actualFramesPerChunk);
 
@@ -98,13 +110,9 @@ class ModPlayer extends AudioWorkletProcessor {
       }
       framesToRender -= framesPerChunk;
       framesRendered += framesPerChunk;
-    }
-
-
-    if (ended) {
-      // this.disconnect();
-      // this.cleanup();
-      // error ? processNode.player.fireEvent('onError', {type: 'openmpt'}) : processNode.player.fireEvent('onEnded');
+      if (actualFramesPerChunk === 0) {
+        // post message end...
+      }
     }
 
     return true;

@@ -13,7 +13,7 @@ export class AppComponent implements OnInit {
 
   constructor(
     public ngZone: NgZone,
-    private playerService: PlayerService
+    public playerService: PlayerService
   ) {
   }
 
@@ -46,8 +46,16 @@ export class AppComponent implements OnInit {
 
   }
 
+  load(event: MouseEvent) {
+    // this.playerService.load();
+  }
+
   play(event: MouseEvent) {
     this.playerService.play();
+  }
+
+  stop(event: MouseEvent) {
+    this.playerService.stop();
   }
 
 }
