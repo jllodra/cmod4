@@ -111,7 +111,11 @@ class ModPlayer extends AudioWorkletProcessor {
       framesToRender -= framesPerChunk;
       framesRendered += framesPerChunk;
       if (actualFramesPerChunk === 0) {
-        // post message end...
+        console.log('Song ended');
+        this.stop();
+        this.port.postMessage({
+          type: 'stop'
+        });
       }
     }
 

@@ -1,5 +1,6 @@
 import { Component, NgZone, OnInit } from '@angular/core';
-import {PlayerService} from "./services/player/player.service";
+import {IState, PlayerService} from "./services/player/player.service";
+import {Observable} from "rxjs";
 
 @Component({
   selector: 'app-root',
@@ -9,41 +10,34 @@ import {PlayerService} from "./services/player/player.service";
 export class AppComponent implements OnInit {
   title = 'cmod4';
 
-  modPlayer;
+  state$: Observable<IState>;
 
   constructor(
-    public ngZone: NgZone,
     public playerService: PlayerService
   ) {
+    this.state$ = this.playerService.stateObs$;
+    // this.playerService.stateObs$.subscribe(a => console.log(a));
   }
 
   ngOnInit() {
-
-    var loadedMod;
-
-
-
-
-    var xhr = new XMLHttpRequest();
+    let loadedMod;
+    const xhr = new XMLHttpRequest();
     xhr.responseType = 'arraybuffer'; // make response as ArrayBuffer
     xhr.open('GET',
-      '/assets/radix_-_yuki_satellites.xm'
+      '/assets/mods/radix_-_yuki_satellites.xm'
       , true);
-
     xhr.send();
     xhr.onload = (event) => {
       console.log(xhr.response);
       loadedMod = new Int8Array(xhr.response);
       console.log(loadedMod);
 
-      this.playerService.$ready.subscribe((ready) => {
+      this.playerService.ready$.subscribe((ready) => {
         if (ready) {
           this.playerService.loadSong(loadedMod);
         }
       });
-
     }
-
   }
 
   load(event: MouseEvent) {

@@ -1,5 +1,10 @@
-import { Injectable } from '@angular/core';
+import {Injectable, NgZone} from '@angular/core';
 import {BehaviorSubject, Observable} from "rxjs";
+
+export interface IState {
+  loaded: boolean;
+  playing: boolean;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -8,13 +13,15 @@ export class PlayerService {
 
   private readonly context: AudioContext;
   private modPlayer: AudioWorkletNode;
+  private state$ = new BehaviorSubject<IState>({
+    loaded: false,
+    playing: false
+  });
 
-  public loaded = false;
-  public playing = false;
+  public stateObs$ = this.state$.asObservable();
+  public ready$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
-  public $ready: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-
-  constructor() {
+  constructor(private ngZone: NgZone) {
     this.context = new AudioContext({
       latencyHint: 'playback'
     });
@@ -22,8 +29,11 @@ export class PlayerService {
       .then(() => {
         console.log('setup');
         this.setupModPlayer();
-        this.$ready.next(true);
+        this.ready$.next(true);
       });
+
+
+    this.stateObs$.subscribe((a)=> console.log(a));
   }
 
   setupModPlayer() {
@@ -32,13 +42,24 @@ export class PlayerService {
       numberOfOutputs: 1,
       outputChannelCount: [2]
     });
-    this.modPlayer.port.onmessage = this.onMessage;
+    this.modPlayer.port.onmessage = this.onMessage.bind(this);
     this.setSampleRate();
     this.modPlayer.connect(this.context.destination);
   }
 
   onMessage(event: MessageEvent) {
-    console.log(event.data);
+    this.ngZone.run(() => {
+      console.log(event.data);
+      switch (event.data.type) {
+        case 'stop':
+          this.state$.next({
+            ...this.state$.getValue(),
+            playing: false
+          });
+          console.log(this.state$.getValue());
+          break;
+      }
+    });
   }
 
   setSampleRate() {
@@ -50,7 +71,10 @@ export class PlayerService {
 
   loadSong(modData: any) {
     console.log(this.modPlayer);
-    this.loaded = true;
+    this.state$.next({
+      ...this.state$.getValue(),
+      loaded: true
+    });
     this.modPlayer.port.postMessage({
       type: 'load_song',
       payload: modData
@@ -58,7 +82,8 @@ export class PlayerService {
   }
 
   play() {
-    if (this.playing) {
+    const playing = this.state$.getValue().playing;
+    if (playing) {
       this.modPlayer.port.postMessage({
         type: 'pause'
       });
@@ -67,14 +92,20 @@ export class PlayerService {
         type: 'play'
       });
     }
-    this.playing = !this.playing;
+    this.state$.next({
+      ...this.state$.getValue(),
+      playing: !playing
+    });
   }
 
   stop() {
     this.modPlayer.port.postMessage({
       type: 'stop'
     });
-    this.playing = false;
+    this.state$.next({
+      ...this.state$.getValue(),
+      playing: false
+    });
   }
 
 }
