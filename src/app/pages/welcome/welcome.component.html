@@ -1,0 +1,17 @@
+<input #inputLoad style="display: none;" type="file" multiple accept=".mod,.s3m,.xm,.it,.mptm,.stm,.nst,.m15,.stk,.wow,.ult,.669,.mtm,.med,.far,.mdl,.ams,.dsm,.amf,.okt,.dmf,.ptm,.psm,.mt2,.dbm,.digi,.imf,.j2b,.gdm,.umx,.mo3,.xpk,.ppm,.mmcmp">
+
+<button (click)="load($event)">Load</button>
+
+<br><br>
+
+<button (click)="play($event)" [disabled]="!(state$ | async).loaded">
+  {{ (state$ | async).playing ? 'Pause' : 'Play' }}
+</button>
+
+<br><br>
+
+<button (click)="stop($event)" [disabled]="!(state$ | async).loaded">Stop</button>
+
+<pre>
+  Playing {{ (state$ | async).playing }}
+</pre>
