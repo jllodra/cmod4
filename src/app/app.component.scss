@@ -22,10 +22,13 @@
   font-size: 20px;
   cursor: pointer;
   transition: all .3s,padding 0s;
+
+  &:hover {
+    color: #1890ff;
+  }
 }
 
 .trigger:hover {
-  color: #1890ff;
 }
 
 .sidebar-logo {
@@ -86,7 +89,7 @@ nz-content {
 }
 
 .inner-content {
-  padding: 24px;
+  // padding: 24px;
   background: #fff;
   height: 100%;
 }

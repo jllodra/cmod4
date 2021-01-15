@@ -5,11 +5,11 @@ import {IState, PlayerService} from "../../services/player/player.service";
 const fs = window.nw.require('fs');
 
 @Component({
-  selector: 'app-welcome',
-  templateUrl: './welcome.component.html',
-  styleUrls: ['./welcome.component.scss']
+  selector: 'app-playlist',
+  templateUrl: './playlist.component.html',
+  styleUrls: ['./playlist.component.scss']
 })
-export class WelcomeComponent implements OnInit, AfterViewInit {
+export class PlaylistComponent implements OnInit, AfterViewInit {
   title = 'cmod4';
 
   state$: Observable<IState>;
@@ -18,6 +18,27 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
 
   loadFileChangeListenerFn;
   loadFileClickListenerFn;
+
+  listOfData: any[] = [
+    {
+      key: '1',
+      name: 'John Brown',
+      age: 32,
+      address: 'New York No. 1 Lake Park'
+    },
+    {
+      key: '2',
+      name: 'Jim Green',
+      age: 42,
+      address: 'London No. 1 Lake Park'
+    },
+    {
+      key: '3',
+      name: 'Joe Black',
+      age: 32,
+      address: 'Sidney No. 1 Lake Park'
+    }
+  ];
 
   constructor(
     private ngZone: NgZone,
@@ -34,6 +55,12 @@ export class WelcomeComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     this.prepareLoadFileListeners();
   }
+
+  selectSong(event: MouseEvent) {
+    console.log(event);
+  }
+
+
 
   prepareLoadFileListeners() {
     this.loadFileClickListenerFn = this.loadFileClickListener.bind(this);

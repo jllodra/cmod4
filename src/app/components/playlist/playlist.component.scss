@@ -1,0 +1,21 @@
+.playlist-wrapper {
+
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .playlist-container {
+    flex: 1;
+  }
+
+  .playback-control-icons {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+
+    > * {
+      margin: 0 .5rem;
+    }
+  }
+
+}

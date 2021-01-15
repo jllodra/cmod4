@@ -1,0 +1,51 @@
+<input #inputLoad style="display: none;" type="file" multiple accept=".mod,.s3m,.xm,.it,.mptm,.stm,.nst,.m15,.stk,.wow,.ult,.669,.mtm,.med,.far,.mdl,.ams,.dsm,.amf,.okt,.dmf,.ptm,.psm,.mt2,.dbm,.digi,.imf,.j2b,.gdm,.umx,.mo3,.xpk,.ppm,.mmcmp">
+
+<div class="playlist-wrapper">
+
+  <div class="playlist-container">
+    <nz-table #basicTable
+              [nzData]="listOfData"
+              nzSize="small"
+              [nzHideOnSinglePage]="true"
+              >
+      <thead>
+      <tr>
+        <th>File</th>
+        <th>Song</th>
+        <th>Length</th>
+        <th>Format</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let data of basicTable.data" (click)="selectSong($event)">
+        <td>{{data.name}}</td>
+        <td>{{data.age}}</td>
+        <td>{{data.address}}</td>
+        <td>
+          <a>Action 一 {{data.name}}</a>
+          <nz-divider nzType="vertical"></nz-divider>
+          <a>Delete</a>
+        </td>
+      </tr>
+      </tbody>
+    </nz-table>
+  </div>
+
+  <div class="playback-control-icons">
+    <button nz-button (click)="load($event)" nzType="primary" nzShape="round">
+      <i nz-icon nzType="folder-open"></i>
+      Add
+    </button>
+
+    <button nz-button (click)="play($event)"
+            [disabled]="!(state$ | async).loaded"
+            nzShape="round">
+      <i nz-icon [nzType]="(state$ | async).playing ? 'pause' : 'caret-right'"></i>
+      {{ (state$ | async).playing ? 'Pause' : 'Play' }}
+    </button>
+
+    <button nz-button (click)="stop($event)" nzShape="round">
+      Stop
+    </button>
+  </div>
+</div>
