@@ -4,6 +4,7 @@ import {BehaviorSubject, Observable} from "rxjs";
 export interface IState {
   loaded: boolean;
   playing: boolean;
+  metadata: {}; // TODO define type
 }
 
 @Injectable({
@@ -15,7 +16,8 @@ export class PlayerService {
   private modPlayer: AudioWorkletNode;
   private state$ = new BehaviorSubject<IState>({
     loaded: false,
-    playing: false
+    playing: false,
+    metadata: null
   });
 
   public stateObs$ = this.state$.asObservable();
@@ -57,6 +59,12 @@ export class PlayerService {
             playing: false
           });
           console.log(this.state$.getValue());
+          break;
+        case 'metadata':
+          this.state$.next({
+            ...this.state$.getValue(),
+            metadata: event.data.payload
+          });
           break;
       }
     });

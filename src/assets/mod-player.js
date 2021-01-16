@@ -54,7 +54,28 @@ class ModPlayer extends AudioWorkletProcessor {
     this.modulePtr = libopenmpt._openmpt_module_create_from_memory(this.ptrToFile, songData.byteLength, 0, 0, 0);
     this.leftBufferPtr  = libopenmpt._malloc(4 * this.maxFramesPerChunk);
     this.rightBufferPtr = libopenmpt._malloc(4 * this.maxFramesPerChunk);
+    this.readMetadata();
     console.log(this.modulePtr);
+  }
+
+  readMetadata() {
+    const metadata = {};
+    const metadata_keys = libopenmpt.UTF8ToString(libopenmpt._openmpt_module_get_metadata_keys(this.modulePtr));
+    const keys = metadata_keys.split(';');
+    let keyNameBuffer = 0;
+    for (let i = 0; i < keys.length; i++) {
+      keyNameBuffer = libopenmpt._malloc(keys[i].length + 1);
+      libopenmpt.writeAsciiToMemory(keys[i], keyNameBuffer);
+      metadata[keys[i]] = libopenmpt.UTF8ToString(libopenmpt._openmpt_module_get_metadata(this.modulePtr, keyNameBuffer));
+      libopenmpt._free(keyNameBuffer);
+    }
+    metadata.duration = libopenmpt._openmpt_module_get_duration_seconds(this.modulePtr);
+    libopenmpt._openmpt_free_string(metadata_keys);
+    console.log(metadata);
+    this.port.postMessage({
+      type: 'metadata',
+      payload: metadata
+    });
   }
 
   play() {

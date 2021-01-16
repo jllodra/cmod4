@@ -19,6 +19,27 @@ export class PlaylistComponent implements OnInit, AfterViewInit {
   loadFileChangeListenerFn;
   loadFileClickListenerFn;
 
+  listOfColumns: any[] = [
+    {
+      name: 'File'
+    },
+    {
+      name: 'Name',
+      sortOrder: null,
+      sortFn: (a: any, b: any) => a.name.localeCompare(b.name),
+      sortDirections: ['ascend', 'descend', null],
+      filterMultiple: true,
+      listOfFilter: [],
+      filterFn: (list: string[], item: any) => list.some(name => item.name.indexOf(name) !== -1)
+    },
+    {
+      name: 'Length'
+    },
+    {
+      name: 'Format'
+    }
+  ];
+
   listOfData: any[] = [
     {
       key: '1',
@@ -40,6 +61,18 @@ export class PlaylistComponent implements OnInit, AfterViewInit {
     }
   ];
 
+  columnDefs = [
+    { field: 'make' },
+    { field: 'model' },
+    { field: 'price'}
+  ];
+
+  rowData = [
+    { make: 'Toyota', model: 'Celica', price: 35000 },
+    { make: 'Ford', model: 'Mondeo', price: 32000 },
+    { make: 'Porsche', model: 'Boxter', price: 72000 }
+  ];
+
   constructor(
     private ngZone: NgZone,
     public playerService: PlayerService
@@ -56,8 +89,8 @@ export class PlaylistComponent implements OnInit, AfterViewInit {
     this.prepareLoadFileListeners();
   }
 
-  selectSong(event: MouseEvent) {
-    console.log(event);
+  selectSong(event: MouseEvent, i) {
+    console.log(i, event);
   }
 
 

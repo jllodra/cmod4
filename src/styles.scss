@@ -1,1 +1,16 @@
 /* You can add global styles to this file, and also import other style files */
+
+@font-face {
+  font-family: 'Lobster';
+  src: url('assets/Lobster 1.4.otf');
+}
+
+* {
+  cursor: default !important;
+  -webkit-user-select: none;
+}
+
+#brand {
+  font-family: 'Lobster', cursive;
+  font-size: 2rem;
+}
