@@ -1,11 +1,31 @@
 import {Injectable, NgZone} from '@angular/core';
 import {BehaviorSubject, Observable} from "rxjs";
 
+export interface IMetadata {
+  artist: string;
+  container: string;
+  container_long: string;
+  date: string;
+  duration: number;
+  message: string;
+  message_raw: string;
+  originaltype: string;
+  originaltype_long: string;
+  title: string;
+  tracker: string;
+  type: string;
+  type_long: string;
+  warnings: string;
+}
+
 export interface IState {
   loaded: boolean;
   playing: boolean;
-  metadata: {}; // TODO define type
+  paused: boolean;
+  metadata: IMetadata; // of the module currently loaded/playing
 }
+
+
 
 @Injectable({
   providedIn: 'root'
@@ -17,6 +37,7 @@ export class PlayerService {
   private state$ = new BehaviorSubject<IState>({
     loaded: false,
     playing: false,
+    paused: false,
     metadata: null
   });
 
@@ -33,7 +54,6 @@ export class PlayerService {
         this.setupModPlayer();
         this.ready$.next(true);
       });
-
 
     this.stateObs$.subscribe((a)=> console.log(a));
   }
@@ -91,6 +111,8 @@ export class PlayerService {
 
   play() {
     const playing = this.state$.getValue().playing;
+    // const paused = this.state$.getValue().paused;
+    // let paused;
     if (playing) {
       this.modPlayer.port.postMessage({
         type: 'pause'
@@ -102,7 +124,8 @@ export class PlayerService {
     }
     this.state$.next({
       ...this.state$.getValue(),
-      playing: !playing
+      playing: !playing,
+      paused: playing
     });
   }
 
@@ -112,7 +135,8 @@ export class PlayerService {
     });
     this.state$.next({
       ...this.state$.getValue(),
-      playing: false
+      playing: false,
+      paused: false
     });
   }
 

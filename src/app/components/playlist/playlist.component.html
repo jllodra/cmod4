@@ -37,9 +37,16 @@
 
   <div class="playback-control-icons">
     <div>
-      <button nz-button (click)="load($event)">
+      <button nz-button (click)="add($event)">
         <i nz-icon nzType="folder-open"></i>
         Add
+      </button>
+    </div>
+
+    <div>
+      <button nz-button (click)="loadAndPlay($event)">
+        <i nz-icon nzType="folder-open"></i>
+        Load (temp)
       </button>
     </div>
 
@@ -48,7 +55,10 @@
               [disabled]="!(state$ | async).loaded"
               nzType="primary">
         <i nz-icon [nzType]="(state$ | async).playing ? 'pause' : 'caret-right'"></i>
-        {{ (state$ | async).playing ? 'Pause' : 'Play' }}
+        {{
+          (state$ | async).playing ? 'Pause' :
+            (state$ | async).paused ? 'Resume' : 'Play'
+        }}
       </button>
 
       <button nz-button (click)="stop($event)"

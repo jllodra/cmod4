@@ -71,7 +71,6 @@ class ModPlayer extends AudioWorkletProcessor {
     }
     metadata.duration = libopenmpt._openmpt_module_get_duration_seconds(this.modulePtr);
     libopenmpt._openmpt_free_string(metadata_keys);
-    console.log(metadata);
     this.port.postMessage({
       type: 'metadata',
       payload: metadata

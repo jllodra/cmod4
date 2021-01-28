@@ -1,6 +1,7 @@
 import {AfterViewInit, Component, ElementRef, NgZone, OnInit, ViewChild} from '@angular/core';
 import {Observable} from "rxjs";
 import {IState, PlayerService} from "../../services/player/player.service";
+import {first} from "rxjs/operators";
 
 const fs = window.nw.require('fs');
 
@@ -113,7 +114,7 @@ export class PlaylistComponent implements OnInit, AfterViewInit {
 
   //
 
-  loadFile(filePath: string) {
+  loadFile(filePath: string, andPlay?: boolean) {
 
     /*const xhr = new XMLHttpRequest();
     xhr.responseType = 'arraybuffer'; // make response as ArrayBuffer
@@ -133,9 +134,15 @@ export class PlaylistComponent implements OnInit, AfterViewInit {
       console.log(data);
       const loadedMod = new Int8Array(data);
       this.ngZone.run(() => {
-        this.playerService.ready$.subscribe((ready) => {
+        this.playerService.ready$.pipe(first()).subscribe((ready) => {
           if (ready) {
             this.playerService.loadSong(loadedMod);
+            // Here we should wait for the loadSong to complete... we should queue player service requests with an id, etc.
+            if (andPlay) {
+              this.playerService.play();
+            }
+          } else {
+            console.error('Player service not ready.');
           }
         })
       });
@@ -144,8 +151,12 @@ export class PlaylistComponent implements OnInit, AfterViewInit {
 
   // Listeners from template
 
-  load(event: MouseEvent) {
+  add(event: MouseEvent) {
     this.inputLoad.nativeElement.click();
+  }
+
+  loadAndPlay(event: MouseEvent) {
+    this.loadFile('/Users/josep/Projects/cmod4/testing-area/src/radix_-_yuki_satellites.xm', true);
   }
 
   play(event: MouseEvent) {
