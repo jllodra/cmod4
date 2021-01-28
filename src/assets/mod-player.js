@@ -91,7 +91,10 @@ class ModPlayer extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs, parameters) {
-    if (this.modulePtr === 0 || this.modulePtr == null) {
+    if (this.modulePtr === 0 || this.modulePtr == null ||
+      this.leftBufferPtr === 0 || this.leftBufferPtr == null ||
+      this.rightBufferPtr === 0 ||this.rightBufferPtr == null
+      ) {
       return true;
     }
 

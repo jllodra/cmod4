@@ -138,6 +138,7 @@ export class PlaylistComponent implements OnInit, AfterViewInit {
           if (ready) {
             this.playerService.loadSong(loadedMod);
             // Here we should wait for the loadSong to complete... we should queue player service requests with an id, etc.
+            // but not necessary because mod-player.js will not play until song is loaded in memory anyway.
             if (andPlay) {
               this.playerService.play();
             }
