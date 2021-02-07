@@ -1,5 +1,5 @@
-import {Injectable, NgZone} from '@angular/core';
-import {BehaviorSubject, Observable} from "rxjs";
+import { Injectable, NgZone } from '@angular/core';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 
 export interface IMetadata {
   artist: string;
@@ -7,6 +7,7 @@ export interface IMetadata {
   container_long: string;
   date: string;
   duration: number;
+  duraton_str: string;
   message: string;
   message_raw: string;
   originaltype: string;
@@ -22,7 +23,6 @@ export interface IState {
   loaded: boolean;
   playing: boolean;
   paused: boolean;
-  metadata: IMetadata; // of the module currently loaded/playing
 }
 
 
@@ -37,12 +37,14 @@ export class PlayerService {
   private state$ = new BehaviorSubject<IState>({
     loaded: false,
     playing: false,
-    paused: false,
-    metadata: null
+    paused: false
   });
 
   public stateObs$ = this.state$.asObservable();
   public ready$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+
+  public requestId = 0;
+  public requestObs$: { [id: string]: Subject<any> } = {};
 
   constructor(private ngZone: NgZone) {
     this.context = new AudioContext({
@@ -55,7 +57,7 @@ export class PlayerService {
         this.ready$.next(true);
       });
 
-    this.stateObs$.subscribe((a)=> console.log(a));
+    this.stateObs$.subscribe((a) => console.log(a));
   }
 
   setupModPlayer() {
@@ -80,11 +82,21 @@ export class PlayerService {
           });
           console.log(this.state$.getValue());
           break;
-        case 'metadata':
-          this.state$.next({
+        case 'song_loaded':
+          const metadata = event.data.payload;
+          const requestSubject = this.requestObs$[metadata.requestId];
+          requestSubject.next(metadata);
+          requestSubject.complete();
+          delete this.requestObs$[metadata.requestId];
+          break;
+        case 'metadata_read': // aka song_loaded... (todo)
+          console.log('metadata_read');
+          // const metadata = event.data.payload;
+          // this.requestObs$[metadata.requestId].next(metadata);
+          /*this.state$.next({
             ...this.state$.getValue(),
             metadata: event.data.payload
-          });
+          });*/
           break;
       }
     });
@@ -97,7 +109,7 @@ export class PlayerService {
     });
   }
 
-  loadSong(modData: any) {
+  loadSong(filePath: string, modData: any) {
     console.log(this.modPlayer);
     this.state$.next({
       ...this.state$.getValue(),
@@ -105,8 +117,16 @@ export class PlayerService {
     });
     this.modPlayer.port.postMessage({
       type: 'load_song',
-      payload: modData
+      payload: {
+        requestId: this.requestId,
+        filePath,
+        modData
+      }
     });
+    const requestObs = new Subject();
+    this.requestObs$[this.requestId] = requestObs;
+    this.requestId++;
+    return requestObs.asObservable();
   }
 
   play() {

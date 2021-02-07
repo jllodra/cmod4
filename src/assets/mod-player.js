@@ -32,8 +32,16 @@ class ModPlayer extends AudioWorkletProcessor {
           break;
         case 'load_song':
           console.log(event.data.payload);
-          const songData = event.data.payload;
-          this.load(songData);
+          this.load(
+            event.data.payload.requestId,
+            event.data.payload.requestId,
+            event.data.payload.modData);
+          break;
+        case 'read_metadata': // Just reads metadata from file
+          this.readMetadata(
+            event.data.payload.requestId,
+            event.data.payload.requestId,
+            event.data.payload.modData);
           break;
         case 'play':
           this.play();
@@ -48,33 +56,64 @@ class ModPlayer extends AudioWorkletProcessor {
     };
   }
 
-  load(songData) {
+  load(requestId, filePath, songData) {
+    this.cleanup();
     this.ptrToFile = libopenmpt._malloc(songData.byteLength);
     libopenmpt.HEAPU8.set(songData, this.ptrToFile);
     this.modulePtr = libopenmpt._openmpt_module_create_from_memory(this.ptrToFile, songData.byteLength, 0, 0, 0);
     this.leftBufferPtr  = libopenmpt._malloc(4 * this.maxFramesPerChunk);
     this.rightBufferPtr = libopenmpt._malloc(4 * this.maxFramesPerChunk);
-    this.readMetadata();
-    console.log(this.modulePtr);
+
+    const metadata = this.readMetadata(requestId, filePath);
+
+    // Return song_loaded
+
+    this.port.postMessage({
+      type: 'song_loaded',
+      payload: metadata
+    });
+
   }
 
-  readMetadata() {
+  readMetadata(requestId, filePath, songData) { // TODO: Will be used when we load a song (drag and drop) but we don't want to play it in that moment
+    let modulePtr;
+    if (songData) { // read metadata from data given
+      let ptrToFile = libopenmpt._malloc(songData.byteLength); // todo: check if we need to free ptrToFile
+      libopenmpt.HEAPU8.set(songData, ptrToFile);
+      modulePtr = libopenmpt._openmpt_module_create_from_memory(this.ptrToFile, songData.byteLength, 0, 0, 0);
+    } else {
+      modulePtr = this.modulePtr;
+    }
+
+    // Metadata:
     const metadata = {};
-    const metadata_keys = libopenmpt.UTF8ToString(libopenmpt._openmpt_module_get_metadata_keys(this.modulePtr));
+    const metadata_keys = libopenmpt.UTF8ToString(libopenmpt._openmpt_module_get_metadata_keys(modulePtr));
     const keys = metadata_keys.split(';');
     let keyNameBuffer = 0;
     for (let i = 0; i < keys.length; i++) {
       keyNameBuffer = libopenmpt._malloc(keys[i].length + 1);
       libopenmpt.writeAsciiToMemory(keys[i], keyNameBuffer);
-      metadata[keys[i]] = libopenmpt.UTF8ToString(libopenmpt._openmpt_module_get_metadata(this.modulePtr, keyNameBuffer));
+      metadata[keys[i]] = libopenmpt.UTF8ToString(libopenmpt._openmpt_module_get_metadata(modulePtr, keyNameBuffer));
       libopenmpt._free(keyNameBuffer);
     }
-    metadata.duration = libopenmpt._openmpt_module_get_duration_seconds(this.modulePtr);
+    metadata.duration = libopenmpt._openmpt_module_get_duration_seconds(modulePtr);
+    metadata.duration_str = `${metadata.duration / 60 | 0}:${Math.floor(metadata.duration % 60)}`;
+    metadata.requestId = requestId;
+    metadata.filePath = filePath;
     libopenmpt._openmpt_free_string(metadata_keys);
-    this.port.postMessage({
-      type: 'metadata',
-      payload: metadata
-    });
+
+    console.log(modulePtr);
+
+    if (songData) {
+      libopenmpt._openmpt_module_destroy(modulePtr);
+      // _free ptrToFile?
+      this.port.postMessage({
+        type: 'metadata_read',
+        payload: metadata
+      });
+    }
+
+    return metadata;
   }
 
   play() {
@@ -88,6 +127,22 @@ class ModPlayer extends AudioWorkletProcessor {
   stop() {
     this.shouldPlay = false;
     libopenmpt._openmpt_module_set_position_seconds(this.modulePtr, 0);
+  }
+
+  cleanup() {
+    if (this.modulePtr && this.modulePtr != 0) {
+      libopenmpt._openmpt_module_destroy(this.modulePtr);
+      this.modulePtr = 0;
+    }
+    if (this.leftBufferPtr && this.leftBufferPtr != 0) {
+      libopenmpt._free(this.leftBufferPtr);
+      this.leftBufferPtr = 0;
+    }
+    if (this.rightBufferPtr && this.rightBufferPtr != 0) {
+      libopenmpt._free(this.rightBufferPtr);
+      this.rightBufferPtr = 0;
+    }
+    // _free ptrToFile?
   }
 
   process(inputs, outputs, parameters) {
@@ -143,21 +198,6 @@ class ModPlayer extends AudioWorkletProcessor {
     }
 
     return true;
-  }
-
-  cleanup = function() {
-    if (this.modulePtr != 0) {
-      libopenmpt._openmpt_module_destroy(this.modulePtr);
-      this.modulePtr = 0;
-    }
-    if (this.leftBufferPtr != 0) {
-      libopenmpt._free(this.leftBufferPtr);
-      this.leftBufferPtr = 0;
-    }
-    if (this.rightBufferPtr != 0) {
-      libopenmpt._free(this.rightBufferPtr);
-      this.rightBufferPtr = 0;
-    }
   }
 
 }

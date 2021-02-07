@@ -130,22 +130,26 @@ export class PlaylistComponent implements OnInit, AfterViewInit {
     }*/
 
     fs.readFile(filePath, (err, data) => {
-      if (err) throw err;
+      if (err) {
+        throw err;
+      }
       console.log(data);
       const loadedMod = new Int8Array(data);
       this.ngZone.run(() => {
         this.playerService.ready$.pipe(first()).subscribe((ready) => {
           if (ready) {
-            this.playerService.loadSong(loadedMod);
-            // Here we should wait for the loadSong to complete... we should queue player service requests with an id, etc.
-            // but not necessary because mod-player.js will not play until song is loaded in memory anyway.
-            if (andPlay) {
-              this.playerService.play();
-            }
+            this.playerService.loadSong(filePath, loadedMod).pipe(
+              first()
+            ).subscribe((metadata) => {
+              console.log('song loaded', metadata);
+              if (andPlay) {
+                this.playerService.play();
+              }
+            });
           } else {
             console.error('Player service not ready.');
           }
-        })
+        });
       });
     });
   }
